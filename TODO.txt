@@ -1,0 +1,29 @@
+Work flow:
+1.	Write gdrive.py 
+o	2 excel file – system info, stock price sheet
+2.	Write database.py
+o	Fetch the database in some global
+o	Implement a handler to update the system info (to be called after defining IPC’s) 
+3.	Write stock.py such that:
+o	every 5 minutes it shall monitor all the listed shares
+o	Don’t use sleep, instead use a 5 minutes timer approach
+o	Every 30 minutes it will refresh the database (use 5 minutes * 30)
+
+4.	Write system.py
+o	First Check internet connectivity
+o	Fork stock.py as a separate process
+o	 Implement an IPC command to STOCK->SYSTEM for heartbeat
+o	Implement an IPC command to STOCK->SYSTEM for LED actions
+o	Implement an IPC command to STOCK->SYSTEM for system failure (drive fetch error)
+o	Implement an IPC command to SYSTEM->STOCK to update system info
+o	
+5.	Speaker.py
+o	Implement many IPC’s for System booted success, Internet failure, gdrive fetch failure, TARGET SELL, BUY, CRITICAL SELL.
+o	Additionally implement a 9AM IPC to broadcast good morning message with listed share prices. 
+o	Implement a 5 mins heartbeat IPC and where also ping a bubble to keep speaker alive.
+6.	LED.py 
+o	Implement all IPC’s defined in speaker.py instead of the broadcast messages
+7.	Fan.py – monitor the system temperature every 30 seconds. 
+o	Send temp via IPC to system.py (can also be act as heartbeat IPC).
+o	In case temp goes high, swich ON fan (optional if it can be controlled via GPIO)
+o	System should take appropriate action (like reboot) if temp goes critically high.
