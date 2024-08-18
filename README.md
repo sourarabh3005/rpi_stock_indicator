@@ -6,3 +6,9 @@ The Raspberry Pi Based Long-Term Capital Gain Indicator is a smart stock market 
 
 Setup rclone: Manual process in linux command line. Need some patience
 https://www.youtube.com/watch?v=nrzOdwVb5p4
+
+Additional Python Libraries:
+pip install pandas openpyxl
+
+Excel cheetsheet:
+Insert Date: Ctrl + ;

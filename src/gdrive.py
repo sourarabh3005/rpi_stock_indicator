@@ -44,6 +44,14 @@ class RCloneDrive:
         except subprocess.CalledProcessError as e:
             print(f"Error uploading file: {e}")
 
+
+def upload_file_to_gdrive(local_file):
+    # Initialize RCloneDrive
+    rclone = RCloneDrive()  # Replace with your remote name
+    # Upload the file
+    rclone.upload_file(local_file)
+
+
 # Example usage
 if __name__ == '__main__':
     rclone_drive = RCloneDrive()
