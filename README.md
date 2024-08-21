@@ -8,7 +8,11 @@ Setup rclone: Manual process in linux command line. Need some patience
 https://www.youtube.com/watch?v=nrzOdwVb5p4
 
 Additional Python Libraries:
-pip install pandas openpyxl
+Excel:
+pip install openpyxl
+Sound:
+sudo apt-get install mpg321
+pip install gtts pydub 
 
 Excel cheetsheet:
 Insert Date: Ctrl + ;

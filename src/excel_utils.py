@@ -65,8 +65,8 @@ def change_row_color(file_path, sheet_name, row, color="00FF00"):
     print(f"Changed the background color of row {row} to {color}")
 
 # Example usage
-file_path = '/home/sourabh/proj/rpi_stock_indicator/tmp/listed_stocks.xlsx'
-data = fetch_data_from_excel(file_path, sheet_name="Sheet1")
-print(data)
-update_excel_data(file_path, sheet_name="Sheet1", row=5, column=5, new_value="hello")
-change_row_color(file_path, sheet_name="Sheet1", row=5, color="FFFF00")
+#file_path = '/home/sourabh/proj/rpi_stock_indicator/tmp/listed_stocks.xlsx'
+#data = fetch_data_from_excel(file_path, sheet_name="Sheet1")
+#print(data)
+#update_excel_data(file_path, sheet_name="Sheet1", row=5, column=5, new_value="hello")
+#change_row_color(file_path, sheet_name="Sheet1", row=5, color="FFFF00")
