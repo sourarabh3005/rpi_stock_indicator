@@ -14,12 +14,13 @@ class StockThread(threading.Thread):
         self.to_stock_queue = to_stock_queue
         self.to_system_queue = to_system_queue
         self.stop_event = threading.Event()
+        time.sleep(1)
 
     def handle_task(self, task, message):
         print(f"StockThread is handling task: {task} with message: {message}")
         # Simulate task processing
         time.sleep(2)
-        return -1  # Return 0 on success
+        return 0  # Return 0 on success
 
     def run(self):
         while not self.stop_event.is_set():

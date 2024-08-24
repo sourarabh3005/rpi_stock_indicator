@@ -6,6 +6,9 @@ from gpio_pins import GpioPin
 from queue import Empty  # Import the Empty exception
 import RPi.GPIO as GPIO
 
+# Define tasks
+TASK_SYSTEM_REBOOT = 0x101
+TASK_SYSTEM_ACK = 0x102
 
 
 class GpioThread(threading.Thread):
@@ -42,7 +45,8 @@ class GpioThread(threading.Thread):
         print("Button pressed for 0.5 to 5 seconds: Executing Job 1")
 
     def job2(self):
-        print("Button pressed for 5 to 10 seconds: Executing Job 2")
+        print("Button pressed for 5 to 10 seconds: sending reoot command to system")
+        self.to_system_queue.put((TASK_SYSTEM_REBOOT, "5 second button pressed"))
 
     def job3(self):
         print("Button pressed for 10 seconds or more: Executing Job 3")

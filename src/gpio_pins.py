@@ -45,6 +45,10 @@ def startup_blink():
   GPIO.output(GpioPin.STK_R.value.value, GPIO.LOW)  
 
 def system_led_transition(state: SystemState):
+  GPIO.output(GpioPin.SYS_R.value.value, GPIO.HIGH)
+  GPIO.output(GpioPin.SYS_G.value.value, GPIO.HIGH)
+  GPIO.output(GpioPin.SYS_B.value.value, GPIO.HIGH)
+  
   if state == SystemState.DEFAULT:
     print("Transition to DEFAULT: Set LED to Blue")
     GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)

@@ -1,8 +1,31 @@
+import os
 import threading
 import time
 import queue
 from gpio_thread import GpioThread  # Import GpioThread from thread.py
 from stock_thread import StockThread, TASK_1, TASK_2  # Import StockThread and tasks from thread2.py
+from gpio_pins import SystemState, system_led_transition
+import requests
+from gpio_thread import TASK_SYSTEM_REBOOT, TASK_SYSTEM_ACK
+
+
+def check_internet(url='https://www.google.com/', timeout=5):
+    try:
+        # Try to make a GET request to the specified URL
+        response = requests.get(url, timeout=timeout)
+        # If the request is successful, return True
+        return True if response.status_code == 200 else False
+    except (requests.ConnectionError, requests.Timeout):
+        # If the request fails due to connection or timeout issues, return False
+        return False
+
+
+def reboot_system():
+    try:
+        print("Rebooting the system...")
+        os.system('sudo reboot')
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 class System:
     def __init__(self):
@@ -19,7 +42,12 @@ class System:
                     # Process messages from both GpioThread and StockThread
                     task, message = self.to_system_queue.get(timeout=1)
                     if task is not None:
-                        print(f"System received task: {task} with message: {message}")
+                      print(f"System received task: {task} with message: {message}")
+                      if task is TASK_SYSTEM_REBOOT:
+                        print("Rebooting the system...")
+                        system_led_transition(SystemState.DEFAULT)
+                        reboot_system()
+                        
                     self.to_system_queue.task_done()
             except queue.Empty:
                 continue
@@ -28,6 +56,12 @@ class System:
         while not self.stop_event.is_set():
             with self.mutex:
                 print("System is doing its own job...")
+                if check_internet():
+                  print("Internet is working.")
+                  system_led_transition(SystemState.RUNNING)
+                else:
+                  print("Internet is not working.")
+                  system_led_transition(SystemState.INTERNET_DOWN)
             time.sleep(10)
 
     def start(self):
@@ -36,12 +70,16 @@ class System:
 
         self.stock_thread = StockThread(self.to_stock_queue, self.to_system_queue)
         self.stock_thread.start()
-
+        
+        print("Creating system message handler ...")
         threading.Thread(target=self.message_queue_handler, daemon=True).start()
 
         # Pass TASK_1 and TASK_2 to StockThread
         self.to_stock_queue.put((TASK_1, "Message for TASK_1"))
         self.to_stock_queue.put((TASK_2, "Message for TASK_2"))
+        
+        print("All necessary System initialization is done... LED GREEN")
+        system_led_transition(SystemState.RUNNING)
 
         try:
             self.print_message_loop()
