@@ -2,17 +2,22 @@ import RPi.GPIO as GPIO
 import time
 
 # Pin Definitions
-switch_pin = 17  # GPIO pin connected to the switch
-led_pin = 27     # GPIO pin connected to the LED (for visual feedback)
+switch_pin = 26  # GPIO pin connected to the switch
+led_pin = 22     # GPIO pin connected to the LED (for visual feedback)
 
 # Pin Setup
 GPIO.setmode(GPIO.BCM)  # Broadcom pin-numbering scheme
 GPIO.setup(switch_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set switch pin as input with pull-up
 GPIO.setup(led_pin, GPIO.OUT)  # Set led pin as output (optional)
+GPIO.output(led_pin, GPIO.HIGH)  # Turn on the LED (optional feedback)
+time.sleep(1)
+GPIO.output(led_pin, GPIO.LOW)   # Turn off the LED
 
 # Function to handle the interrupt
 def button_callback(channel):
     start_time = time.time()
+    
+    print("Button pressed...")
     
     # Wait for the button to be released
     while GPIO.input(switch_pin) == GPIO.LOW:

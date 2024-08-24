@@ -21,7 +21,7 @@ class SystemState(Enum):
     DEFAULT = 1          # R=1 G=1 B=0 :: Blue
     RUNNING = 2          # R=1 G=0 B=1 :: Green
     INTERNET_DOWN = 3    # R=0 G=1 B=0 :: Magenta
-    DATABASE_ERROR = 4   # R=0 G=1 B=1 :: Red
+    SYSTEM_ERROR = 4     # R=0 G=1 B=1 :: Red
     AP_MODE = 5          # R=0 G=0 B=0 :: White
 
 
@@ -55,8 +55,8 @@ def system_led_transition(state: SystemState):
     print("Transition to INTERNET_DOWN: Set LED to Magenta")
     GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
     GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-  elif state == SystemState.DATABASE_ERROR:
-    print("Transition to DATABASE_ERROR: Set LED to Red")
+  elif state == SystemState.SYSTEM_ERROR:
+    print("Transition to SYSTEM_ERROR: Set LED to Red")
     GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
   elif state == SystemState.AP_MODE:
     print("AP Mode")
@@ -74,10 +74,9 @@ def configure_gpio():
   for task in GpioPin:
     print(f"Task: {task.name}, Value: {task.value.value}, Flag: {task.value.flag}")  
     if task.value.flag is True:
-      GPIO.setup(task.value.value, GPIO.OUT)  # Set led pin as output (optional)  
-      GPIO.output(task.value.value, GPIO.LOW)    
+      GPIO.setup(task.value.value, GPIO.OUT)  # Set led pin as output (optional)      
     else:
-      GPIO.setup(task.value.value, GPIO.IN)  # Set led pin as output (optional)
+      GPIO.setup(task.value.value, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set led pin as output (optional)
       
   startup_blink()
   time.sleep(1)

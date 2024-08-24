@@ -28,7 +28,7 @@ class System:
         while not self.stop_event.is_set():
             with self.mutex:
                 print("System is doing its own job...")
-            time.sleep(1)
+            time.sleep(10)
 
     def start(self):
         self.gpio_thread = GpioThread(self.to_gpio_queue, self.to_system_queue)
