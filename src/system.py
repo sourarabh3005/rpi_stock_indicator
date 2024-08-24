@@ -1,44 +1,64 @@
+import threading
+import time
 import queue
-from thread_gpio import GpioThread, TASK_GP_STSTEM_DEFAULT, TASK_GP_SYSTEM_RUNNING, TASK_GP_INTERNET_DOWN
+from gpio_thread import GpioThread  # Import GpioThread from thread.py
+from stock_thread import StockThread, TASK_1, TASK_2  # Import StockThread and tasks from thread2.py
+
+class System:
+    def __init__(self):
+        self.to_gpio_queue = queue.Queue()  # Queue for messages to GpioThread
+        self.to_stock_queue = queue.Queue()  # Queue for messages to StockThread
+        self.to_system_queue = queue.Queue()  # Queue for messages to System
+        self.stop_event = threading.Event()
+        self.mutex = threading.Lock()  # Mutex for shared resources
+
+    def message_queue_handler(self):
+        while not self.stop_event.is_set():
+            try:
+                with self.mutex:
+                    # Process messages from both GpioThread and StockThread
+                    task, message = self.to_system_queue.get(timeout=1)
+                    if task is not None:
+                        print(f"System received task: {task} with message: {message}")
+                    self.to_system_queue.task_done()
+            except queue.Empty:
+                continue
+
+    def print_message_loop(self):
+        while not self.stop_event.is_set():
+            with self.mutex:
+                print("System is doing its own job...")
+            time.sleep(1)
+
+    def start(self):
+        self.gpio_thread = GpioThread(self.to_gpio_queue, self.to_system_queue)
+        self.gpio_thread.start()
+
+        self.stock_thread = StockThread(self.to_stock_queue, self.to_system_queue)
+        self.stock_thread.start()
+
+        threading.Thread(target=self.message_queue_handler, daemon=True).start()
+
+        # Pass TASK_1 and TASK_2 to StockThread
+        self.to_stock_queue.put((TASK_1, "Message for TASK_1"))
+        self.to_stock_queue.put((TASK_2, "Message for TASK_2"))
+
+        try:
+            self.print_message_loop()
+        except KeyboardInterrupt:
+            self.stop()
+
+    def stop(self):
+        print("Stopping system...")
+        self.stop_event.set()
+        self.gpio_thread.stop()
+        self.stock_thread.stop()
+        self.gpio_thread.join()
+        self.stock_thread.join()
 
 def main():
-    # Create queues for IPC
-    gp_task_queue = queue.Queue()
-    gp_result_queue = queue.Queue()
-    
-    # Create and start the worker thread
-    gp_worker = GpioThread(gp_task_queue, gp_result_queue)
-    gp_worker.start()
-
-    try:
-        # Enqueue different tasks with messages
-        tasks = [
-            (TASK_GP_STSTEM_DEFAULT, "Hello from Task 1"),
-            (TASK_GP_SYSTEM_RUNNING, "Hello from Task 2"),
-            (TASK_GP_INTERNET_DOWN, "Hello from Task 3")
-        ]
-
-        for task in tasks:
-            gp_task_queue.put(task)
-            result = gp_result_queue.get()  # Wait for the task to complete and get the result
-            if result != 0:
-                print(f"Error encountered during {task[1]}, breaking out.")
-                break
-
-        # Wait for any remaining tasks to be completed
-        task_queue.join()
-
-    except Exception as e:
-        print(f"Exception in main thread: {e}")
-    
-    finally:
-        # Signal the worker thread to exit
-        gp_worker.stop()
-        gp_task_queue.put((None, None))
-
-        # Wait for the worker thread to exit
-        gp_worker.join()
-        print("Main thread exiting.")
+    system = System()
+    system.start()
 
 if __name__ == "__main__":
     main()
