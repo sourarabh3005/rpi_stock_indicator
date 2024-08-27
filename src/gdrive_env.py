@@ -1,0 +1,2 @@
+REMOTE_NAME="xyz"
+GDRIVE_SYNC_PATH="./tmp"

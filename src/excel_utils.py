@@ -33,7 +33,7 @@ def update_excel_data(file_path, sheet_name, row, column, new_value):
     sheet = workbook[sheet_name]
     
     # Update the specific cell
-    sheet.cell(row=row, column=column, value=new_value)
+    sheet.cell(row=row+1, column=column+1, value=new_value)
     
     # Save the workbook
     workbook.save(file_path)
