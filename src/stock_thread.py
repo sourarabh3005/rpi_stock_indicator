@@ -4,6 +4,8 @@ import threading
 import time
 import queue
 
+STOCK_THREAD_DELAY = 10
+
 # Define tasks
 TASK_1 = 1
 TASK_2 = 2
@@ -18,8 +20,8 @@ class StockThread(threading.Thread):
 
     def handle_task(self, task, message):
         print(f"StockThread is handling task: {task} with message: {message}")
-        # Simulate task processing
-        time.sleep(2)
+        #sync_drive(local_path, )
+        time.sleep(1)
         return 0  # Return 0 on success
 
     def run(self):
@@ -30,7 +32,7 @@ class StockThread(threading.Thread):
 
             try:
                 # Wait for incoming tasks from System, with a 60-second timeout
-                task, message = self.to_stock_queue.get(timeout=60)
+                task, message = self.to_stock_queue.get(timeout=STOCK_THREAD_DELAY)
                 if task is not None:
                     print(f"StockThread received task: {task} with message: {message}")
                     ret_code = self.handle_task(task, message)
@@ -47,6 +49,7 @@ class StockThread(threading.Thread):
     def execute_timeout_code(self):
         # This function will execute if 60 seconds pass without a new task
         print("Executing timeout code in StockThread...")
+        monitor_stock_market()
 
     def stop(self):
         print("Stopping StockThread...")

@@ -24,7 +24,7 @@ class RCloneDrive:
             print(f"Error listing files: {e}")
             return []
 
-    def sync_files(self, local_path):
+    def sync_file(self, local_path):
         """Sync files from Google Drive."""
         try:
             # TODO: implement to clean the local_path first
@@ -46,11 +46,12 @@ class RCloneDrive:
 
 
 def upload_file_to_gdrive(local_file):
-    # Initialize RCloneDrive
     rclone = RCloneDrive()  # Replace with your remote name
-    # Upload the file
     rclone.upload_file(local_file)
 
+def download_file_from_gdrive(dload_path):
+    rclone = RCloneDrive()
+    rclone.sync_file(dload_path)
 
 # Example usage
 if __name__ == '__main__':
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     #rclone_drive.list_files()
 
     # Download a specific file from Google Drive to local machine
-    rclone_drive.sync_files(GDRIVE_SYNC_PATH)
+    rclone_drive.sync_file(GDRIVE_SYNC_PATH)
 
     # Upload a file from local machine to Google Drive
     #rclone_drive.upload_file( GDRIVE_SYNC_PATH + 'listed_stocks.xlsx')
