@@ -7,11 +7,10 @@ from stocks import monitor_stock_market
 
 STOCK_THREAD_DELAY = 10
 
-# Define tasks
-TASK_1 = 1
-TASK_2 = 2
 
 class StockThread(threading.Thread):
+    cpu_temp = 0
+    
     def __init__(self, to_stock_queue, to_system_queue):
         super().__init__()
         self.to_stock_queue = to_stock_queue
@@ -21,7 +20,6 @@ class StockThread(threading.Thread):
 
     def handle_task(self, task, message):
         print(f"StockThread is handling task: {task} with message: {message}")
-        #sync_drive(local_path, )
         time.sleep(1)
         return 0  # Return 0 on success
 
@@ -49,8 +47,8 @@ class StockThread(threading.Thread):
 
     def execute_timeout_code(self):
         # This function will execute if 60 seconds pass without a new task
-        print("Executing timeout code in StockThread...")
-        monitor_stock_market()
+        print(f"Executing timeout code in StockThread... cpu_temp {self.cpu_temp}")
+        monitor_stock_market(self, self.cpu_temp)
 
     def stop(self):
         print("Stopping StockThread...")

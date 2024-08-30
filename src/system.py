@@ -2,11 +2,11 @@ import os
 import threading
 import time
 import queue
-from gpio_thread import GpioThread  # Import GpioThread from thread.py
-from stock_thread import StockThread, TASK_1, TASK_2  # Import StockThread and tasks from thread2.py
+from gpio_thread import GpioThread  
+from stock_thread import StockThread
 from gpio_pins import SystemState
 import requests
-from gpio_thread import TASK_SYSTEM_REBOOT, TASK_SYSTEM_ACK
+from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
 
 SYSTEM_THREAD_DELAY = 9.5
 
@@ -59,10 +59,17 @@ class System:
                     task, message = self.to_system_queue.get(timeout=1)
                     if task is not None:
                       print(f"System received task: {task} with message: {message}")
+                      
                       if task is TASK_SYSTEM_REBOOT:
                         print("Rebooting the system...")
                         self.gpio_thread.system_led_transition(SystemState.DEFAULT)
                         reboot_system()
+                        
+                      if task is TASK_SYSTEM_DEFAULT:
+                        self.system_state = SystemState.DEFAULT
+                        
+                      if task is TASK_SYSTEM_RUNNING:
+                        self.system_state = SystemState.RUNNING
                         
                     self.to_system_queue.task_done()
             except queue.Empty:
@@ -78,13 +85,17 @@ class System:
     def monitor_system(self):
         while not self.stop_event.is_set():
             with self.mutex:
-                print("System is doing its own job...")
+                temp = get_cpu_temperature()
+                self.stock_thread.cpu_temp = temp
+                print(f"System is doing its own job...{temp}")
+                
                 if check_internet():
                   print("Internet is working.")
                   self.blink_system_led()
                 else:
                   print("Internet is not working.")
                   self.gpio_thread.system_led_transition(SystemState.INTERNET_DOWN)
+                  
             time.sleep(SYSTEM_THREAD_DELAY)
 
     def start(self):
@@ -98,8 +109,8 @@ class System:
         threading.Thread(target=self.message_queue_handler, daemon=True).start()
 
         # Pass TASK_1 and TASK_2 to StockThread
-        self.to_stock_queue.put((TASK_1, "Message for TASK_1"))
-        self.to_stock_queue.put((TASK_2, "Message for TASK_2"))
+        #self.to_stock_queue.put((TASK_1, "Message for TASK_1"))
+        #self.to_stock_queue.put((TASK_2, "Message for TASK_2"))
         
         print("All necessary System initialization is done... LED OFF")
         self.gpio_thread.system_led_transition(SystemState.OFF)

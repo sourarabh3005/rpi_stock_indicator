@@ -11,3 +11,10 @@ class SystemFields(Enum):
     SYS_SELL_STK_VAL  = (1, 3) 
     SYS_CRT_STK_FLAG  = (0, 4)
     SYS_CRT_STK_VAL   = (1, 4)
+    
+class StkWishList(Enum):
+    S_NO = 0
+    TCKR = 1
+    TYPE = 2
+    TARGET = 3
+    CURRENT = 4

@@ -6,10 +6,8 @@ from gpio_pins import GpioPin
 from gpio_pins import SystemState, system_led_transition_with_check
 from queue import Empty  # Import the Empty exception
 import RPi.GPIO as GPIO
-
-# Define tasks
-TASK_SYSTEM_REBOOT = 0x101
-TASK_SYSTEM_ACK = 0x102
+import task_def
+from task_def import TASK_SYSTEM_REBOOT
 
 
 class GpioThread(threading.Thread):

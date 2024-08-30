@@ -18,6 +18,20 @@ def fetch_data_from_excel(file_path, sheet_name=None):
     
     return data
 
+def fetch_data_from_sheet(workbook, sheet_name):    
+    # Select the sheet by name or the active sheet by default
+    if sheet_name:
+        sheet = workbook[sheet_name]
+    else:
+        sheet = workbook.active
+    
+    # Fetch data as a list of lists (rows and columns)
+    data = []
+    for row in sheet.iter_rows(values_only=True):
+        data.append(row)
+    
+    return data
+
 def excel_save(file_path):
     workbook.save(file_path)
 

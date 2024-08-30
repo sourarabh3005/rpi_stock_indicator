@@ -1,11 +1,15 @@
 # Import the functions from excel_utils.py
-from excel_utils import fetch_data_from_excel, update_excel_data, change_cell_color
+from excel_utils import fetch_data_from_excel, update_excel_data, change_cell_color, fetch_data_from_sheet
 from gdrive import upload_file_to_gdrive, download_file_from_gdrive
 from enum import Enum
-from sheet import SystemFields
+from sheet import SystemFields,  StkWishList
 import shutil
 from openpyxl import load_workbook
 from datetime import datetime
+import task_def
+from  task_def import TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
+
+MAX_ALLOWED_ROWS = 10
 
 def copy_file(src, dest):
     """
@@ -38,11 +42,6 @@ def get_current_time():
     current_time = datetime.now().time()
     return current_time.strftime("%H:%M:%S")
     
-# Define an enumeration
-class idx(Enum):
-    S_NO = 0
-    TCKR = 1
-    BUY_UNIT = 2
 
 dload_path = '/home/sourabh/rpi_stock_indicator/tmp/dload'
 dload_sysfile_name = '/home/sourabh/rpi_stock_indicator/tmp/dload/system_info.xlsx'
@@ -58,12 +57,7 @@ def file_is_under_edit(file_path):
     else:
         return True
 
-num_sell_stk = 1
-num_buy_stk = 1
-num_crt_stk = 0
-cpu_temp = 40.5
-
-def update_all_system_info(file_path):
+def update_all_system_info(file_path, cpu_temp, num_sell_stk, num_buy_stk, num_crt_stk):
 
     print("Updating all necessary system info")
     data = load_workbook(file_path)
@@ -113,29 +107,56 @@ def update_all_system_info(file_path):
 
     data.save(file_path)    
     
+
+def process_wishlist(workbook):
+    data = fetch_data_from_sheet(workbook, "Wishlist")
+    idx_col = StkWishList.S_NO.value
+    tkr_col = StkWishList.TCKR.value
     
+    for i in range(MAX_ALLOWED_ROWS):
+      if i == 0:
+        continue
+        
+      idx = data[i][idx_col]
+      tkr = data[i][tkr_col]
+      
+      if tkr is None:
+        break;
+        
+      print(f"idx {idx} tkr {tkr}")    
+          
     
 
-def monitor_stock_market():
+def monitor_stock_market(inst, cpu_temp):
+    num_sell_stk = 1
+    num_buy_stk = 0
+    num_crt_stk = 0
+    
     print("Monitor stock market...")
     download_file_from_gdrive(dload_path)
     if file_is_under_edit(dload_sysfile_name) is True:
         print("File under edit")
+        inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
         return
         
 
     copy_file(dload_stkfile_name, tmp_stkfile_name)
     
-    #process_wishlist(tmp_file_path)
+    data = load_workbook(tmp_stkfile_name)
+    process_wishlist(data)
+    data.save(tmp_stkfile_name)
+    
     download_file_from_gdrive(dload_path)
     if file_is_under_edit(dload_sysfile_name) is True:
         print("File under edit")
+        inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
         return
 
-    update_all_system_info(dload_sysfile_name)
+    update_all_system_info(dload_sysfile_name, cpu_temp, num_sell_stk, num_buy_stk, num_crt_stk)
     
     upload_file_to_gdrive(dload_sysfile_name)
     upload_file_to_gdrive(tmp_stkfile_name)
+    inst.to_system_queue.put((TASK_SYSTEM_RUNNING, "stocks monitor works fine"))
 
 
 
