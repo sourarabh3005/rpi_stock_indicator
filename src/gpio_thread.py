@@ -3,6 +3,7 @@ import time
 from gpio_pins import configure_gpio
 from gpio_pins import set_stk_led
 from gpio_pins import GpioPin
+from gpio_pins import SystemState, system_led_transition_with_check
 from queue import Empty  # Import the Empty exception
 import RPi.GPIO as GPIO
 
@@ -16,6 +17,7 @@ class GpioThread(threading.Thread):
     stk_buy = False
     stk_crt = False
     switch_pin = GpioPin.SW.value.value
+    switch_pressed = False
     
     def __init__(self, to_gpio_queue, to_system_queue):
         super().__init__()
@@ -25,14 +27,23 @@ class GpioThread(threading.Thread):
         configure_gpio()
         GPIO.add_event_detect(self.switch_pin, GPIO.FALLING, callback=self.button_callback, bouncetime=200)
         
+    def system_led_transition(self, state: SystemState):
+        system_led_transition_with_check(state, self.switch_pressed)
+        
     def button_callback(self, channel):
         start_time = time.time()
+        
+        print("Current system state is {curr_state.value}")
+        self.system_led_transition(SystemState.AP_MODE)
 
+        self.switch_pressed = True
         # Wait for the button to be released
         while GPIO.input(self.switch_pin) == GPIO.LOW:
             time.sleep(0.01)  # Small delay to prevent CPU overuse
+        self.switch_pressed = False
 
         press_duration = time.time() - start_time
+        self.system_led_transition(SystemState.DEFAULT)
 
         if press_duration >= 0.5 and press_duration < 5:
             self.job1()  # Call job1 if button is pressed for 0.5 to 5 seconds
@@ -43,13 +54,27 @@ class GpioThread(threading.Thread):
 
     def job1(self):
         print("Button pressed for 0.5 to 5 seconds: Executing Job 1")
+        self.system_led_transition(SystemState.OFF)
+        time.sleep(1)
+        self.system_led_transition(SystemState.DEFAULT)
 
     def job2(self):
         print("Button pressed for 5 to 10 seconds: sending reoot command to system")
+        self.system_led_transition(SystemState.OFF)
+        time.sleep(0.5)
+        self.system_led_transition(SystemState.DEFAULT)
+        time.sleep(0.5)
+        self.system_led_transition(SystemState.OFF)
+        time.sleep(0.5)
+        self.system_led_transition(SystemState.DEFAULT)
+        time.sleep(0.5)
+        self.system_led_transition(SystemState.OFF)
         self.to_system_queue.put((TASK_SYSTEM_REBOOT, "5 second button pressed"))
+
 
     def job3(self):
         print("Button pressed for 10 seconds or more: Executing Job 3")
+        self.system_led_transition(SystemState.DEFAULT)
 
     def handle_task(self, task, message):
         print(f"GpioThread is handling task: {task} with message: {message}")

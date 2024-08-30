@@ -7,6 +7,7 @@ from collections import namedtuple
 # Define a structure with a value and a flag
 TaskItem = namedtuple('TaskItem', ['value', 'flag'])
 
+
 class GpioPin(Enum):
     #            GPIO_n, IsOutput
     SYS_R = TaskItem(21, True)
@@ -23,7 +24,7 @@ class SystemState(Enum):
     INTERNET_DOWN = 3    # R=0 G=1 B=0 :: Magenta
     SYSTEM_ERROR = 4     # R=0 G=1 B=1 :: Red
     AP_MODE = 5          # R=0 G=0 B=0 :: White
-
+    OFF=6
 
 def startup_blink():
   # Turn all LED's ON
@@ -44,31 +45,35 @@ def startup_blink():
   GPIO.output(GpioPin.STK_Y.value.value, GPIO.LOW)
   GPIO.output(GpioPin.STK_R.value.value, GPIO.LOW)  
 
-def system_led_transition(state: SystemState):
-  GPIO.output(GpioPin.SYS_R.value.value, GPIO.HIGH)
-  GPIO.output(GpioPin.SYS_G.value.value, GPIO.HIGH)
-  GPIO.output(GpioPin.SYS_B.value.value, GPIO.HIGH)
-  
-  if state == SystemState.DEFAULT:
-    print("Transition to DEFAULT: Set LED to Blue")
-    GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-  elif state == SystemState.RUNNING:
-    print("Running")
-    GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
-  elif state == SystemState.INTERNET_DOWN:
-    print("Transition to INTERNET_DOWN: Set LED to Magenta")
-    GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
-    GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-  elif state == SystemState.SYSTEM_ERROR:
-    print("Transition to SYSTEM_ERROR: Set LED to Red")
-    GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
-  elif state == SystemState.AP_MODE:
-    print("AP Mode")
-    GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
-    GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
-    GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-  else:
-    print("Default")
+# store the current state of system LED, to be used to transition back if switch is release
+
+def system_led_transition_with_check(state: SystemState, switch_pressed):
+    #print(f"Inside system_led_transition_with_check switchpressed = {switch_pressed}")
+    if switch_pressed is False:
+        GPIO.output(GpioPin.SYS_R.value.value, GPIO.HIGH)
+        GPIO.output(GpioPin.SYS_G.value.value, GPIO.HIGH)
+        GPIO.output(GpioPin.SYS_B.value.value, GPIO.HIGH)
+
+        if state == SystemState.DEFAULT:
+          print("Transition to DEFAULT: Set LED to Blue")
+          GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
+        elif state == SystemState.RUNNING:
+          print("Running")
+          GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
+        elif state == SystemState.INTERNET_DOWN:
+          print("Transition to INTERNET_DOWN: Set LED to Magenta")
+          GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
+          GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
+        elif state == SystemState.SYSTEM_ERROR:
+          print("Transition to SYSTEM_ERROR: Set LED to Red")
+          GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
+        elif state == SystemState.AP_MODE:
+          print("AP Mode")
+          GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
+          GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
+          GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
+        else:
+          print("System LED OFF")
     
   
 def configure_gpio():
@@ -84,7 +89,7 @@ def configure_gpio():
       
   startup_blink()
   time.sleep(1)
-  system_led_transition(SystemState.DEFAULT)
+  system_led_transition_with_check(SystemState.DEFAULT, False)
   
 def set_stk_led(buy, sell, crt, set):
   if buy:

@@ -4,10 +4,24 @@ import time
 import queue
 from gpio_thread import GpioThread  # Import GpioThread from thread.py
 from stock_thread import StockThread, TASK_1, TASK_2  # Import StockThread and tasks from thread2.py
-from gpio_pins import SystemState, system_led_transition
+from gpio_pins import SystemState
 import requests
 from gpio_thread import TASK_SYSTEM_REBOOT, TASK_SYSTEM_ACK
 
+SYSTEM_THREAD_DELAY = 9.5
+
+def get_cpu_temperature():
+    """
+    Returns the current temperature of the Raspberry Pi CPU in degrees Celsius.
+    """
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp = f.read()
+        # The temperature is reported in millidegrees, so we divide by 1000
+        return float(temp) / 1000.0
+    except FileNotFoundError:
+        print("Could not read CPU temperature. Ensure this is run on a Raspberry Pi.")
+        return None
 
 def check_internet(url='https://www.google.com/', timeout=5):
     try:
@@ -28,6 +42,8 @@ def reboot_system():
         print(f"An error occurred: {e}")
 
 class System:
+    system_state = SystemState.DEFAULT
+    
     def __init__(self):
         self.to_gpio_queue = queue.Queue()  # Queue for messages to GpioThread
         self.to_stock_queue = queue.Queue()  # Queue for messages to StockThread
@@ -45,24 +61,31 @@ class System:
                       print(f"System received task: {task} with message: {message}")
                       if task is TASK_SYSTEM_REBOOT:
                         print("Rebooting the system...")
-                        system_led_transition(SystemState.DEFAULT)
+                        self.gpio_thread.system_led_transition(SystemState.DEFAULT)
                         reboot_system()
                         
                     self.to_system_queue.task_done()
             except queue.Empty:
                 continue
-
-    def print_message_loop(self):
+                
+    def blink_system_led(self):
+        self.gpio_thread.system_led_transition(self.system_state)
+        time.sleep(0.5)
+        self.gpio_thread.system_led_transition(SystemState.OFF)
+    
+    
+    ##### WHILE Loop  
+    def monitor_system(self):
         while not self.stop_event.is_set():
             with self.mutex:
                 print("System is doing its own job...")
                 if check_internet():
                   print("Internet is working.")
-                  system_led_transition(SystemState.RUNNING)
+                  self.blink_system_led()
                 else:
                   print("Internet is not working.")
-                  system_led_transition(SystemState.INTERNET_DOWN)
-            time.sleep(10)
+                  self.gpio_thread.system_led_transition(SystemState.INTERNET_DOWN)
+            time.sleep(SYSTEM_THREAD_DELAY)
 
     def start(self):
         self.gpio_thread = GpioThread(self.to_gpio_queue, self.to_system_queue)
@@ -78,11 +101,11 @@ class System:
         self.to_stock_queue.put((TASK_1, "Message for TASK_1"))
         self.to_stock_queue.put((TASK_2, "Message for TASK_2"))
         
-        print("All necessary System initialization is done... LED GREEN")
-        system_led_transition(SystemState.RUNNING)
+        print("All necessary System initialization is done... LED OFF")
+        self.gpio_thread.system_led_transition(SystemState.OFF)
 
         try:
-            self.print_message_loop()
+            self.monitor_system()
         except KeyboardInterrupt:
             self.stop()
 
