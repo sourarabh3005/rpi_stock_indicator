@@ -3,6 +3,7 @@
 import threading
 import time
 import queue
+from stocks import monitor_stock_market
 
 STOCK_THREAD_DELAY = 10
 

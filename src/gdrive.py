@@ -53,15 +53,3 @@ def download_file_from_gdrive(dload_path):
     rclone = RCloneDrive()
     rclone.sync_file(dload_path)
 
-# Example usage
-if __name__ == '__main__':
-    rclone_drive = RCloneDrive()
-
-    # List files in the root directory of Google Drive
-    #rclone_drive.list_files()
-
-    # Download a specific file from Google Drive to local machine
-    rclone_drive.sync_file(GDRIVE_SYNC_PATH)
-
-    # Upload a file from local machine to Google Drive
-    #rclone_drive.upload_file( GDRIVE_SYNC_PATH + 'listed_stocks.xlsx')

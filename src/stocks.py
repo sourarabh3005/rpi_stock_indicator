@@ -117,6 +117,7 @@ def update_all_system_info(file_path):
     
 
 def monitor_stock_market():
+    print("Monitor stock market...")
     download_file_from_gdrive(dload_path)
     if file_is_under_edit(dload_sysfile_name) is True:
         print("File under edit")
@@ -126,30 +127,15 @@ def monitor_stock_market():
     copy_file(dload_stkfile_name, tmp_stkfile_name)
     
     #process_wishlist(tmp_file_path)
-    #download_file_from_gdrive(dload_file_path)
-
     download_file_from_gdrive(dload_path)
     if file_is_under_edit(dload_sysfile_name) is True:
         print("File under edit")
         return
+
     update_all_system_info(dload_sysfile_name)
-    upload_file_to_gdrive(dload_sysfile_name)
-    #upload_file_to_gdrive(tmp_stkfile_name)
-
-
-
-if __name__ == "__main__":
-    monitor_stock_market()
-  #data = fetch_data_from_excel(file_path, sheet_name="System Info")
-  #row, col = SystemFields.SYS_EXCEL_STATE.value 
-  #row, col = SystemFields.SYS_CPU_TEMP.value 
-  #print(f"Fetched data: {data[row][col]}")
-  #update_excel_data(file_path, "System Info", 2, 2, 43.5)
     
-  #upload_file_to_gdrive(file_path)
+    upload_file_to_gdrive(dload_sysfile_name)
+    upload_file_to_gdrive(tmp_stkfile_name)
 
-  #cell_value = data[2][idx.TCKR.value]
-  #if cell_value is not None:  # Check if the cell is not NULL or unfilled
-  #  print(cell_value)
-  #else:
-  #  print("Cell is empty")
+
+
