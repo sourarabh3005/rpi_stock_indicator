@@ -18,29 +18,17 @@ def fetch_data_from_excel(file_path, sheet_name=None):
     
     return data
 
-def update_excel_data(file_path, sheet_name, row, column, new_value):
-    """
-    Update the value of a specific cell in the Excel sheet.
-    
-    :param file_path: Path to the Excel file.
-    :param sheet_name: Name of the sheet where the data needs to be updated.
-    :param row: Row number (1-based index).
-    :param column: Column number (1-based index).
-    :param new_value: The new value to set in the cell.
-    """
-    # Load the workbook and select the sheet
-    workbook = load_workbook(filename=file_path)
-    sheet = workbook[sheet_name]
-    
-    # Update the specific cell
-    sheet.cell(row=row+1, column=column+1, value=new_value)
-    
-    # Save the workbook
+def excel_save(file_path):
     workbook.save(file_path)
-    print(f"Updated cell at row {row}, column {column} with new value: {new_value}")
+
+def update_excel_data(workbook, sheet_name, row, column, new_value):
+    sheet = workbook[sheet_name]
+    # Update the specific cell
+    sheet.cell(row=row+1, column=column+1, value=new_value)    
 
 
-def change_row_color(file_path, sheet_name, row, color="00FF00"):
+
+def change_row_color(file_path, sheet_name, row, color):
     """
     Change the background color of all cells in a specific row.
     
@@ -64,6 +52,18 @@ def change_row_color(file_path, sheet_name, row, color="00FF00"):
     workbook.save(file_path)
     print(f"Changed the background color of row {row} to {color}")
 
+def change_cell_color(workbook, sheet_name, row, column, color):
+    sheet = workbook[sheet_name]
+    
+    # Create a fill pattern with the specified color
+    fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+    
+    # Apply the color to the specified cell
+    cell = sheet.cell(row=row + 1, column=column + 1)
+    cell.fill = fill
+    #workbook.save(file_path)
+    
+    
 # Example usage
 #file_path = '/home/sourabh/proj/rpi_stock_indicator/tmp/listed_stocks.xlsx'
 #data = fetch_data_from_excel(file_path, sheet_name="Sheet1")
