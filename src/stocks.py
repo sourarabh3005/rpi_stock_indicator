@@ -8,6 +8,22 @@ from openpyxl import load_workbook
 from datetime import datetime
 import task_def
 from  task_def import TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
+import yfinance as yf
+
+def get_stock_price(ticker_name, tkr_type):
+    print(f"type {tkr_type}")
+    if tkr_type == "IND":
+      ticker_name = ticker_name + '.NS'
+    try:
+        # Fetch the ticker data
+        ticker = yf.Ticker(ticker_name)
+        # Get the current stock price
+        stock_price = ticker.history(period="1d")['Close'].iloc[-1]
+        return stock_price
+    except IndexError:
+        return "Error: Invalid ticker name or no data available."
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 MAX_ALLOWED_ROWS = 10
 
@@ -112,6 +128,8 @@ def process_wishlist(workbook):
     data = fetch_data_from_sheet(workbook, "Wishlist")
     idx_col = StkWishList.S_NO.value
     tkr_col = StkWishList.TCKR.value
+    cur_col = StkWishList.CURRENT.value
+    type_col = StkWishList.TYPE.value
     
     for i in range(MAX_ALLOWED_ROWS):
       if i == 0:
@@ -119,11 +137,18 @@ def process_wishlist(workbook):
         
       idx = data[i][idx_col]
       tkr = data[i][tkr_col]
+      tkr_type = data[i][type_col]
       
       if tkr is None:
         break;
         
-      print(f"idx {idx} tkr {tkr}")    
+      stock_price = get_stock_price(tkr, tkr_type)
+      print(f"idx {idx} tkr {tkr} price {stock_price}")
+      if "Error" in str(stock_price):
+        update_excel_data(workbook, "Wishlist", i, cur_col, "Invalid TICKR")
+      else:
+        update_excel_data(workbook, "Wishlist", i, cur_col, stock_price)
+          
           
     
 
