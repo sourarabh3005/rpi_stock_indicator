@@ -7,6 +7,8 @@ from stock_thread import StockThread
 from gpio_pins import SystemState
 import requests
 from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
+from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
+from task_def import TASK_SYSTEM_STK_BUY_CLR, TASK_SYSTEM_STK_SELL_CLR, TASK_SYSTEM_STK_CRT_CLR
 
 SYSTEM_THREAD_DELAY = 9.5
 
@@ -70,6 +72,12 @@ class System:
                         
                       if task is TASK_SYSTEM_RUNNING:
                         self.system_state = SystemState.RUNNING
+                        
+                      if task is TASK_SYSTEM_STK_BUY:
+                        self.gpio_thread.stk_buy = True
+                        
+                      if task is TASK_SYSTEM_STK_BUY_CLR:
+                        self.gpio_thread.stk_buy = False
                         
                     self.to_system_queue.task_done()
             except queue.Empty:

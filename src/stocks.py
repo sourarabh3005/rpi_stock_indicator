@@ -9,6 +9,8 @@ from datetime import datetime
 import task_def
 from  task_def import TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
 import yfinance as yf
+from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
+from task_def import TASK_SYSTEM_STK_BUY_CLR, TASK_SYSTEM_STK_SELL_CLR, TASK_SYSTEM_STK_CRT_CLR
 
 def get_stock_price(ticker_name, tkr_type):
     print(f"type {tkr_type}")
@@ -124,12 +126,13 @@ def update_all_system_info(file_path, cpu_temp, num_sell_stk, num_buy_stk, num_c
     data.save(file_path)    
     
 
-def process_wishlist(workbook):
+def process_wishlist(workbook, buy):
     data = fetch_data_from_sheet(workbook, "Wishlist")
     idx_col = StkWishList.S_NO.value
     tkr_col = StkWishList.TCKR.value
     cur_col = StkWishList.CURRENT.value
     type_col = StkWishList.TYPE.value
+    trgt_col = StkWishList.TARGET.value
     
     for i in range(MAX_ALLOWED_ROWS):
       if i == 0:
@@ -138,22 +141,32 @@ def process_wishlist(workbook):
       idx = data[i][idx_col]
       tkr = data[i][tkr_col]
       tkr_type = data[i][type_col]
+      target = data[i][trgt_col]
       
       if tkr is None:
         break;
         
       stock_price = get_stock_price(tkr, tkr_type)
-      print(f"idx {idx} tkr {tkr} price {stock_price}")
+      print(f"idx {idx} tkr {tkr} price {stock_price} target {target}")
       if "Error" in str(stock_price):
         update_excel_data(workbook, "Wishlist", i, cur_col, "Invalid TICKR")
       else:
         update_excel_data(workbook, "Wishlist", i, cur_col, stock_price)
+        
+      if target is None:
+        print("Target is not set...")
+      else:
+        print("******* TARGET REACHED")
+        if stock_price < target:
+          buy[0] += 1
+          
+    print(f"buy = {buy}")
           
           
     
 
 def monitor_stock_market(inst, cpu_temp):
-    num_sell_stk = 1
+    num_sell_stk = 0
     num_buy_stk = 0
     num_crt_stk = 0
     
@@ -168,7 +181,17 @@ def monitor_stock_market(inst, cpu_temp):
     copy_file(dload_stkfile_name, tmp_stkfile_name)
     
     data = load_workbook(tmp_stkfile_name)
-    process_wishlist(data)
+    buy = [0]
+    process_wishlist(data, buy)
+    
+    # ***** Raise the Buy flag if required *****
+    print(f"--------- {num_buy_stk} {buy}")
+    if num_buy_stk == 0 and buy[0] > 0:
+      inst.to_system_queue.put((TASK_SYSTEM_STK_BUY, "Buy flag set..."))
+    elif num_buy_stk > 0 and buy[0] == 0:
+      inst.to_system_queue.put((TASK_SYSTEM_STK_BUY, "Buy flag cleared..."))
+      
+    num_buy_stk = buy[0]
     data.save(tmp_stkfile_name)
     
     download_file_from_gdrive(dload_path)
