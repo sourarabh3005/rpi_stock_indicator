@@ -1,16 +1,17 @@
 # Import the functions from excel_utils.py
-from excel_utils import fetch_data_from_excel, update_excel_data, change_cell_color, fetch_data_from_sheet
+from excel_utils import fetch_data_from_excel, update_excel_data, change_cell_color, fetch_data_from_sheet, change_row_color
 from gdrive import upload_file_to_gdrive, download_file_from_gdrive
 from enum import Enum
 from sheet import SystemFields,  StkWishList
 import shutil
 from openpyxl import load_workbook
 from datetime import datetime
-import task_def
-from  task_def import TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
 import yfinance as yf
+from  task_def import TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
 from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
 from task_def import TASK_SYSTEM_STK_BUY_CLR, TASK_SYSTEM_STK_SELL_CLR, TASK_SYSTEM_STK_CRT_CLR
+
+MAX_ALLOWED_ROWS = 100
 
 def get_stock_price(ticker_name, tkr_type):
     print(f"type {tkr_type}")
@@ -26,8 +27,6 @@ def get_stock_price(ticker_name, tkr_type):
         return "Error: Invalid ticker name or no data available."
     except Exception as e:
         return f"An error occurred: {e}"
-
-MAX_ALLOWED_ROWS = 10
 
 def copy_file(src, dest):
     """
@@ -153,12 +152,16 @@ def process_wishlist(workbook, buy):
       else:
         update_excel_data(workbook, "Wishlist", i, cur_col, stock_price)
         
+      color="FFFFFF"
       if target is None:
         print("Target is not set...")
       else:
         print("******* TARGET REACHED")
         if stock_price < target:
+          color="FFFF00"
           buy[0] += 1
+          
+      change_row_color(workbook, "Wishlist", i, color)
           
     print(f"buy = {buy}")
           
