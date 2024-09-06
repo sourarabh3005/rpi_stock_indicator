@@ -2,7 +2,7 @@
 from excel_utils import fetch_data_from_excel, update_excel_data, change_cell_color, fetch_data_from_sheet, change_row_color
 from gdrive import upload_file_to_gdrive, download_file_from_gdrive
 from enum import Enum
-from sheet import SystemFields,  StkWishList
+from sheet import SystemFields,  StkWishList, StkPortfolio
 import shutil
 from openpyxl import load_workbook
 from datetime import datetime
@@ -165,13 +165,48 @@ def process_wishlist(workbook, buy):
           
     print(f"buy = {buy}")
           
+def process_portfolio(workbook, sell, crt):
+    data = fetch_data_from_sheet(workbook, "Portfolio")
+    idx_col = StkPortfolio.S_NO.value
+    tkr_col = StkPortfolio.TCKR.value
+    cur_col = StkPortfolio.CURRENT.value
+    type_col = StkPortfolio.TYPE.value
+    trgt_col = StkPortfolio.TARGET.value
+    
+    for i in range(MAX_ALLOWED_ROWS):
+      if i == 0:
+        continue
+        
+      idx = data[i][idx_col]
+      tkr = data[i][tkr_col]
+      tkr_type = data[i][type_col]
+      target = data[i][trgt_col]
+      
+      if tkr is None:
+        break;
+        
+      stock_price = get_stock_price(tkr, tkr_type)
+      print(f"idx {idx} tkr {tkr} price {stock_price} target {target}")
+      if "Error" in str(stock_price):
+        update_excel_data(workbook, "Portfolio", i, cur_col, "Invalid TICKR")
+      else:
+        update_excel_data(workbook, "Portfolio", i, cur_col, stock_price)
+        
+      color="FFFFFF"
+      if target is None:
+        print("Target is not set...")
+      else:
+        print("******* TARGET REACHED")
+        if stock_price > target:
+          color="00FF00"
+          sell[0] += 1
           
+      change_row_color(workbook, "Portfolio", i, color)
+          
+    print(f"sell = {sell}")        
     
 
-def monitor_stock_market(inst, cpu_temp):
-    num_sell_stk = 0
-    num_buy_stk = 0
-    num_crt_stk = 0
+def monitor_stock_market(inst):
     
     print("Monitor stock market...")
     download_file_from_gdrive(dload_path)
@@ -184,17 +219,29 @@ def monitor_stock_market(inst, cpu_temp):
     copy_file(dload_stkfile_name, tmp_stkfile_name)
     
     data = load_workbook(tmp_stkfile_name)
+
     buy = [0]
-    process_wishlist(data, buy)
-    
+    process_wishlist(data, buy)    
     # ***** Raise the Buy flag if required *****
-    print(f"--------- {num_buy_stk} {buy}")
-    if num_buy_stk == 0 and buy[0] > 0:
+    print(f"--------- {inst.num_buy_stk} {buy}")
+    if inst.num_buy_stk == 0 and buy[0] > 0:
       inst.to_system_queue.put((TASK_SYSTEM_STK_BUY, "Buy flag set..."))
-    elif num_buy_stk > 0 and buy[0] == 0:
-      inst.to_system_queue.put((TASK_SYSTEM_STK_BUY, "Buy flag cleared..."))
-      
-    num_buy_stk = buy[0]
+    elif inst.num_buy_stk > 0 and buy[0] == 0:
+      inst.to_system_queue.put((TASK_SYSTEM_STK_BUY_CLR, "Buy flag cleared..."))      
+    inst.num_buy_stk = buy[0]
+    
+    
+    sell = [0]
+    crt = [0]
+    process_portfolio(data, sell, crt)    
+    # ***** Raise the sell flag if required *****
+    print(f"--------- {inst.num_sell_stk} {sell}")
+    if inst.num_sell_stk == 0 and sell[0] > 0:
+      inst.to_system_queue.put((TASK_SYSTEM_STK_SELL, "Sell flag set..."))
+    elif inst.num_sell_stk > 0 and sell[0] == 0:
+      inst.to_system_queue.put((TASK_SYSTEM_STK_SELL_CLR, "Sell flag cleared..."))      
+    inst.num_sell_stk = sell[0]
+    
     data.save(tmp_stkfile_name)
     
     download_file_from_gdrive(dload_path)
@@ -203,7 +250,7 @@ def monitor_stock_market(inst, cpu_temp):
         inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
         return
 
-    update_all_system_info(dload_sysfile_name, cpu_temp, num_sell_stk, num_buy_stk, num_crt_stk)
+    update_all_system_info(dload_sysfile_name, inst.cpu_temp, inst.num_sell_stk, inst.num_buy_stk, inst.num_crt_stk)
     
     upload_file_to_gdrive(dload_sysfile_name)
     upload_file_to_gdrive(tmp_stkfile_name)

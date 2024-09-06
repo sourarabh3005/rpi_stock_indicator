@@ -10,6 +10,9 @@ STOCK_THREAD_DELAY = 10
 
 class StockThread(threading.Thread):
     cpu_temp = 0
+    num_sell_stk = 0
+    num_buy_stk = 0
+    num_crt_stk = 0
     
     def __init__(self, to_stock_queue, to_system_queue):
         super().__init__()
@@ -48,7 +51,7 @@ class StockThread(threading.Thread):
     def execute_timeout_code(self):
         # This function will execute if 60 seconds pass without a new task
         print(f"Executing timeout code in StockThread... cpu_temp {self.cpu_temp}")
-        monitor_stock_market(self, self.cpu_temp)
+        monitor_stock_market(self)
 
     def stop(self):
         print("Stopping StockThread...")

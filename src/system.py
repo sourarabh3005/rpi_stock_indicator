@@ -78,6 +78,12 @@ class System:
                         
                       if task is TASK_SYSTEM_STK_BUY_CLR:
                         self.gpio_thread.stk_buy = False
+
+                      if task is TASK_SYSTEM_STK_SELL:
+                        self.gpio_thread.stk_sell = True
+                        
+                      if task is TASK_SYSTEM_STK_SELL_CLR:
+                        self.gpio_thread.stk_sell = False
                         
                     self.to_system_queue.task_done()
             except queue.Empty:

@@ -18,3 +18,15 @@ class StkWishList(Enum):
     TYPE = 2
     TARGET = 3
     CURRENT = 4
+    
+class StkPortfolio(Enum):
+    S_NO = 0
+    TCKR = 1
+    TYPE = 2
+    BUY_PRICE = 3
+    CURRENT = 4
+    TARGET = 5
+    UNITS = 6
+    DATE = 7
+    PL = 8
+    PL_PERCENT = 9
