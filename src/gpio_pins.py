@@ -91,15 +91,21 @@ def configure_gpio():
   time.sleep(1)
   system_led_transition_with_check(SystemState.DEFAULT, False)
   
-def set_stk_led(buy, sell, crt, set):
+def set_stk_led(buy, sell, crt, set_flag):
   if buy:
-    GPIO.output(GpioPin.STK_Y.value.value, set)
+    GPIO.output(GpioPin.STK_Y.value.value, set_flag)
+  else:
+    GPIO.output(GpioPin.STK_Y.value.value, False)
     
   if sell:
-    GPIO.output(GpioPin.STK_G.value.value, set)
+    GPIO.output(GpioPin.STK_G.value.value, set_flag)
+  else:
+    GPIO.output(GpioPin.STK_G.value.value, False)
     
   if crt:
-    GPIO.output(GpioPin.STK_R.value.value, set)
+    GPIO.output(GpioPin.STK_R.value.value, set_flag)
+  else:
+    GPIO.output(GpioPin.STK_R.value.value, False)
   
   
 
