@@ -5,6 +5,7 @@ import queue
 from gpio_thread import GpioThread  
 from stock_thread import StockThread
 from gpio_pins import SystemState
+from speaker_thread import SoundThread
 import requests
 from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
 from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
@@ -49,6 +50,7 @@ class System:
     def __init__(self):
         self.to_gpio_queue = queue.Queue()  # Queue for messages to GpioThread
         self.to_stock_queue = queue.Queue()  # Queue for messages to StockThread
+        self.to_sound_queue = queue.Queue()  # Queue for messages to SoundThread
         self.to_system_queue = queue.Queue()  # Queue for messages to System
         self.stop_event = threading.Event()
         self.mutex = threading.Lock()  # Mutex for shared resources
@@ -116,8 +118,12 @@ class System:
         self.gpio_thread = GpioThread(self.to_gpio_queue, self.to_system_queue)
         self.gpio_thread.start()
 
+        self.sound_thread = SoundThread(self.to_sound_queue, self.to_system_queue)
+        self.sound_thread.start()
+
         self.stock_thread = StockThread(self.to_stock_queue, self.to_system_queue)
         self.stock_thread.start()
+        
         
         print("Creating system message handler ...")
         threading.Thread(target=self.message_queue_handler, daemon=True).start()
