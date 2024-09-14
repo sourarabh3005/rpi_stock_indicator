@@ -7,9 +7,16 @@ from stock_thread import StockThread
 from gpio_pins import SystemState
 from speaker_thread import SoundThread
 import requests
-from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING
+from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING, TASK_SYSTEM_ACK
 from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
 from task_def import TASK_SYSTEM_STK_BUY_CLR, TASK_SYSTEM_STK_SELL_CLR, TASK_SYSTEM_STK_CRT_CLR
+
+from task_def import TASK_SOUND_STK_SELL, TASK_SOUND_STK_SELL_CLR
+from task_def import TASK_SOUND_STK_CRT, TASK_SOUND_STK_CRT_CLR
+from task_def import TASK_SOUND_STK_BUY, TASK_SOUND_STK_BUY_CLR
+from task_def import TASK_SOUND_ACK
+from task_def import TASK_SOUND_BUSY, TASK_SOUND_BUSY_CLR
+
 
 SYSTEM_THREAD_DELAY = 9.5
 
@@ -71,21 +78,30 @@ class System:
                         
                       if task is TASK_SYSTEM_DEFAULT:
                         self.system_state = SystemState.DEFAULT
+                        self.to_sound_queue.put((TASK_SOUND_BUSY, "File under edit"))
                         
                       if task is TASK_SYSTEM_RUNNING:
                         self.system_state = SystemState.RUNNING
+                        self.to_sound_queue.put((TASK_SOUND_BUSY_CLR, "File ready"))
                         
                       if task is TASK_SYSTEM_STK_BUY:
                         self.gpio_thread.stk_buy = True
+                        self.to_sound_queue.put((TASK_SOUND_STK_BUY, "Stock Buy set"))
                         
                       if task is TASK_SYSTEM_STK_BUY_CLR:
                         self.gpio_thread.stk_buy = False
+                        self.to_sound_queue.put((TASK_SOUND_STK_BUY_CLR, "Stock Buy clear"))
 
                       if task is TASK_SYSTEM_STK_SELL:
                         self.gpio_thread.stk_sell = True
+                        self.to_sound_queue.put((TASK_SOUND_STK_SELL, "Stock Sell set"))
                         
                       if task is TASK_SYSTEM_STK_SELL_CLR:
                         self.gpio_thread.stk_sell = False
+                        self.to_sound_queue.put((TASK_SOUND_STK_SELL_CLR, "Stock Sell clear"))
+                        
+                      if task is TASK_SYSTEM_ACK:
+                        self.to_sound_queue.put((TASK_SOUND_ACK, "Acknoledging the sound alert... Now you clear the highest priority alert"))
                         
                     self.to_system_queue.task_done()
             except queue.Empty:

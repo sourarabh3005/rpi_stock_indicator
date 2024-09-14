@@ -7,7 +7,7 @@ from gpio_pins import SystemState, system_led_transition_with_check
 from queue import Empty  # Import the Empty exception
 import RPi.GPIO as GPIO
 import task_def
-from task_def import TASK_SYSTEM_REBOOT
+from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_ACK
 
 
 class GpioThread(threading.Thread):
@@ -52,9 +52,11 @@ class GpioThread(threading.Thread):
 
     def job1(self):
         print("Button pressed for 0.5 to 5 seconds: Executing Job 1")
+        self.to_system_queue.put((TASK_SYSTEM_ACK, "button pressed Acknoledging system of some event.. Now upto system"))
         self.system_led_transition(SystemState.OFF)
         time.sleep(1)
         self.system_led_transition(SystemState.DEFAULT)
+        
 
     def job2(self):
         print("Button pressed for 5 to 10 seconds: sending reoot command to system")
