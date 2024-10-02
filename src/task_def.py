@@ -1,6 +1,6 @@
 # All the tasks to system thread
 
-TASK_SYSTEM_REBOOT = 0x101
+TASK_SYSTEM_BUSY = 0x101
 TASK_SYSTEM_ACK = 0x102
 
 TASK_SYSTEM_DEFAULT = 0x201

@@ -6,8 +6,9 @@ from gpio_thread import GpioThread
 from stock_thread import StockThread
 from gpio_pins import SystemState
 from speaker_thread import SoundThread
+from wifi_info import get_ipv4_address, get_wifi_ssid
 import requests
-from task_def import TASK_SYSTEM_REBOOT, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING, TASK_SYSTEM_ACK
+from task_def import TASK_SYSTEM_BUSY, TASK_SYSTEM_DEFAULT, TASK_SYSTEM_RUNNING, TASK_SYSTEM_ACK
 from task_def import TASK_SYSTEM_STK_BUY, TASK_SYSTEM_STK_SELL, TASK_SYSTEM_STK_CRT
 from task_def import TASK_SYSTEM_STK_BUY_CLR, TASK_SYSTEM_STK_SELL_CLR, TASK_SYSTEM_STK_CRT_CLR
 
@@ -71,10 +72,13 @@ class System:
                     if task is not None:
                       print(f"System received task: {task} with message: {message}")
                       
-                      if task is TASK_SYSTEM_REBOOT:
-                        print("Rebooting the system...")
-                        self.gpio_thread.system_led_transition(SystemState.DEFAULT)
-                        reboot_system()
+                      if task is TASK_SYSTEM_BUSY:
+                        if self.stock_thread.file_busy:
+                          self.stock_thread.file_busy = False
+                          print("Clearing the Busy Flag... Wait for stock thread to raise clear busy signal")
+                        else:
+                          print("Setting File is busy... Wait for stock thread to raise busy signal")
+                          self.stock_thread.file_busy = True
                         
                       if task is TASK_SYSTEM_DEFAULT:
                         self.system_state = SystemState.DEFAULT
@@ -139,6 +143,9 @@ class System:
 
         self.stock_thread = StockThread(self.to_stock_queue, self.to_system_queue)
         self.stock_thread.start()
+        
+        self.stock_thread.wifi_ssid = get_wifi_ssid()
+        self.stock_thread.system_ip = get_ipv4_address()
         
         
         print("Creating system message handler ...")

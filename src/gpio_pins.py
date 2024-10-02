@@ -55,25 +55,25 @@ def system_led_transition_with_check(state: SystemState, switch_pressed):
         GPIO.output(GpioPin.SYS_B.value.value, GPIO.HIGH)
 
         if state == SystemState.DEFAULT:
-          print("Transition to DEFAULT: Set LED to Blue")
+          #print("Transition to DEFAULT: Set LED to Blue")
           GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
         elif state == SystemState.RUNNING:
-          print("Running")
+          #print("Running")
           GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
         elif state == SystemState.INTERNET_DOWN:
-          print("Transition to INTERNET_DOWN: Set LED to Magenta")
+          #print("Transition to INTERNET_DOWN: Set LED to Magenta")
           GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
           GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
         elif state == SystemState.SYSTEM_ERROR:
-          print("Transition to SYSTEM_ERROR: Set LED to Red")
+          #print("Transition to SYSTEM_ERROR: Set LED to Red")
           GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
         elif state == SystemState.AP_MODE:
-          print("AP Mode")
+          #print("AP Mode")
           GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
           GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
           GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-        else:
-          print("System LED OFF")
+        #else:
+        #  print("System LED OFF")
     
   
 def configure_gpio():

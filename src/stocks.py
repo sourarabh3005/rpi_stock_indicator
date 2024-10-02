@@ -74,8 +74,13 @@ def file_is_under_edit(file_path):
     else:
         return True
 
-def update_all_system_info(file_path, cpu_temp, num_sell_stk, num_buy_stk, num_crt_stk):
+def update_all_system_info(file_path, inst):
 
+    cpu_temp = inst.cpu_temp
+    num_sell_stk = inst.num_sell_stk
+    num_buy_stk = inst.num_buy_stk
+    num_crt_stk = inst.num_crt_stk
+    
     print("Updating all necessary system info")
     data = load_workbook(file_path)
     
@@ -121,6 +126,14 @@ def update_all_system_info(file_path, cpu_temp, num_sell_stk, num_buy_stk, num_c
     # CURRENT TIME
     r, c = SystemFields.SYS_CURR_TIME.value
     update_excel_data(data, sheet_name="System Info", row = r, column = c, new_value=get_current_time())
+    
+    # Wifi SSID
+    r, c = SystemFields.SYS_WIFI_SSID.value
+    update_excel_data(data, sheet_name="System Info", row = r, column = c, new_value=inst.wifi_ssid)
+    
+    # System IP
+    r, c = SystemFields.SYS_IP_ADDR.value
+    update_excel_data(data, sheet_name="System Info", row = r, column = c, new_value=inst.system_ip)
 
     data.save(file_path)    
     
@@ -206,16 +219,31 @@ def process_portfolio(workbook, sell, crt):
     print(f"sell = {sell}")        
     
 
+def busy_button_pressed(inst):
+    if inst.file_busy is True:
+      print("File under edit --- Busy Button Press")
+      inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
+      return True
+    else:
+      return False
+  
+
 def monitor_stock_market(inst):
-    
+    if busy_button_pressed(inst) is True:
+      return
+
     print("Monitor stock market...")
     download_file_from_gdrive(dload_path)
     if file_is_under_edit(dload_sysfile_name) is True:
         print("File under edit")
         inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
         return
+    else:
+        inst.to_system_queue.put((TASK_SYSTEM_RUNNING, "stocks monitor works fine"))
         
-
+    if busy_button_pressed(inst) is True:
+      return
+      
     copy_file(dload_stkfile_name, tmp_stkfile_name)
     
     data = load_workbook(tmp_stkfile_name)
@@ -244,17 +272,21 @@ def monitor_stock_market(inst):
     
     data.save(tmp_stkfile_name)
     
-    download_file_from_gdrive(dload_path)
-    if file_is_under_edit(dload_sysfile_name) is True:
-        print("File under edit")
-        inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
-        return
+    if busy_button_pressed(inst) is True:
+      return
+    
+    #download_file_from_gdrive(dload_path)
+    #if file_is_under_edit(dload_sysfile_name) is True:
+    #    print("File under edit")
+    #    inst.to_system_queue.put((TASK_SYSTEM_DEFAULT, "Excel under edit"))
+    #    return
 
-    update_all_system_info(dload_sysfile_name, inst.cpu_temp, inst.num_sell_stk, inst.num_buy_stk, inst.num_crt_stk)
+    update_all_system_info(dload_sysfile_name, inst)
     
     upload_file_to_gdrive(dload_sysfile_name)
     upload_file_to_gdrive(tmp_stkfile_name)
     inst.to_system_queue.put((TASK_SYSTEM_RUNNING, "stocks monitor works fine"))
 
-
+    if busy_button_pressed(inst) is True:
+      return
 

@@ -10,10 +10,14 @@ STOCK_THREAD_DELAY = 80
 
 class StockThread(threading.Thread):
     cpu_temp = 0
+    system_ip = "0.0.0.0"
+    wifi_ssid = "NONE"
     num_sell_stk = 0
     num_buy_stk = 0
     num_crt_stk = 0
     last_monitor_time = 0
+    file_busy = False
+
     
     def __init__(self, to_stock_queue, to_system_queue):
         super().__init__()
