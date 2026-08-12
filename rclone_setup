@@ -1,0 +1,244 @@
+Google Drive Setup
+
+The project uses rclone to synchronize the Excel files stored in Google Drive with the Raspberry Pi.
+
+The recommended setup is:
+
+Google Drive
+     │
+     │ rclone
+     ▼
+Raspberry Pi
+     │
+     ▼
+Local Excel files
+     │
+     ▼
+rpi_stock_indicator
+
+The Raspberry Pi runs the application using sudo, so the rclone configuration must be available to the user running the application.
+
+1. Install rclone
+
+On the Raspberry Pi:
+
+sudo apt update
+sudo apt install rclone
+
+Verify:
+
+rclone version
+2. Configure Google Drive on a computer with a browser
+
+If the Raspberry Pi is running without a GUI, it is easier to configure the Google Drive remote on a computer with a browser and then copy the rclone configuration to the Raspberry Pi.
+
+In this example, the configuration is created on a Linux laptop.
+
+Start rclone configuration:
+
+rclone config
+
+If an old/unused remote exists, it can be deleted:
+
+Current remotes:
+
+Name                 Type
+====                 ====
+dummy3005             drive
+
+e) Edit existing remote
+n) New remote
+d) Delete remote
+r) Rename remote
+c) Copy remote
+s) Set configuration password
+q) Quit config
+
+e/n/d/r/c/s/q> d
+
+Select the remote to delete:
+
+remote> 1
+
+Then create a new remote:
+
+n) New remote
+
+n/s/q> n
+
+Give the remote a name. For example:
+
+name> hello_world3005
+3. Select Google Drive
+
+When rclone asks for the storage type, select:
+
+13 / Google Drive
+   "drive"
+
+For example:
+
+Storage> 13
+4. Configure Google Drive access
+Google Application Client ID
+
+For the initial setup, leave this blank:
+
+client_id>
+OAuth Client Secret
+
+Leave this blank:
+
+client_secret>
+Drive scope
+
+Select full access because this project needs to read and update the Excel files:
+
+1 / Full access all files, excluding Application Data Folder.
+   "drive"
+
+scope> 1
+Root folder ID
+
+If the project needs to use a specific Google Drive folder, enter its folder ID:
+
+root_folder_id> <GOOGLE_DRIVE_FOLDER_ID>
+
+For example:
+
+root_folder_id> 1MPS_dQotGwQ8RwFtn8F4pLY3cZJ8WTp5
+
+If the project should use the normal Google Drive root, leave this blank.
+
+Note: The folder ID can be obtained from the Google Drive URL. For example, in:
+
+https://drive.google.com/drive/folders/1MPS_dQotGwQ8RwFtn8F4pLY3cZJ8WTp5
+
+the folder ID is:
+
+1MPS_dQotGwQ8RwFtn8F4pLY3cZJ8WTp5
+
+Service account
+
+Leave this blank unless a service account is specifically being used:
+
+service_account_file>
+5. Authenticate Google Drive
+
+When rclone asks:
+
+Edit advanced config?
+y) Yes
+n) No (default)
+
+y/n>
+
+Normally select:
+
+n
+
+For a computer with a browser, use automatic authentication:
+
+Use auto config?
+y) Yes (default)
+n) No
+
+Select:
+
+y
+
+A browser window will open.
+
+Log in using the Google account containing the Excel files and authorize rclone.
+
+After successful authentication, rclone will display the remote configuration.
+
+Confirm it:
+
+y) Yes this is OK (default)
+e) Edit this remote
+d) Delete this remote
+
+y/e/d> y
+
+Finally:
+
+q
+
+to quit.
+
+6. Verify the Google Drive remote
+
+List configured remotes:
+
+rclone listremotes
+
+Expected:
+
+hello_world3005:
+
+List directories:
+
+rclone lsd hello_world3005:
+
+For example:
+
+          -1 2026-08-12 21:47:00        -1 folder1
+
+List files:
+
+rclone lsf hello_world3005:
+
+Example:
+
+folder1/
+hello.docx
+
+The : after the remote name is important:
+
+rclone lsf hello_world3005:
+
+not:
+
+rclone lsf hello_world3005
+7. Copy the rclone configuration to the Raspberry Pi
+
+The rclone configuration is stored on the computer at:
+
+~/.config/rclone/rclone.conf
+
+This file contains authentication information. Do not commit it to GitHub or share it publicly.
+
+On the computer, copy it to the Raspberry Pi:
+
+scp ~/.config/rclone/rclone.conf dash@192.168.31.81:~/.config/rclone/
+
+If the directory doesn't exist on the Pi:
+
+ssh dash@192.168.31.81
+
+Then:
+
+mkdir -p ~/.config/rclone
+
+Exit the SSH session and repeat the scp command.
+
+8. Verify rclone on the Raspberry Pi
+
+On the Raspberry Pi:
+
+rclone listremotes
+
+Expected:
+
+hello_world3005:
+
+Test:
+
+rclone lsd hello_world3005:
+
+and:
+
+rclone lsf hello_world3005:
+
+The Raspberry Pi should see the same Google Drive contents as the computer.
