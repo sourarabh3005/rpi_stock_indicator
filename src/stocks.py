@@ -60,10 +60,10 @@ def get_current_time():
     return current_time.strftime("%H:%M:%S")
     
 
-dload_path = '/home/sourabh/rpi_stock_indicator/tmp/dload'
-dload_sysfile_name = '/home/sourabh/rpi_stock_indicator/tmp/dload/system_info.xlsx'
-dload_stkfile_name = '/home/sourabh/rpi_stock_indicator/tmp/dload/stock_info.xlsx'
-tmp_stkfile_name = '/home/sourabh/rpi_stock_indicator/tmp/stock_info.xlsx'
+dload_path = '/home/dash/rpi_stock_indicator/tmp/dload'
+dload_sysfile_name = '/home/dash/rpi_stock_indicator/tmp/dload/system_info.xlsx'
+dload_stkfile_name = '/home/dash/rpi_stock_indicator/tmp/dload/stock_info.xlsx'
+tmp_stkfile_name = '/home/dash/rpi_stock_indicator/tmp/stock_info.xlsx'
 
 def file_is_under_edit(file_path):
     data = fetch_data_from_excel(file_path, sheet_name="System Info")

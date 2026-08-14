@@ -31,9 +31,6 @@ def startup_blink():
   GPIO.output(GpioPin.SYS_R.value.value, GPIO.LOW)
   GPIO.output(GpioPin.SYS_G.value.value, GPIO.LOW)
   GPIO.output(GpioPin.SYS_B.value.value, GPIO.LOW)
-  GPIO.output(GpioPin.STK_G.value.value, GPIO.HIGH)
-  GPIO.output(GpioPin.STK_Y.value.value, GPIO.HIGH)
-  GPIO.output(GpioPin.STK_R.value.value, GPIO.HIGH)
   
   time.sleep(1)
   
@@ -41,6 +38,12 @@ def startup_blink():
   GPIO.output(GpioPin.SYS_R.value.value, GPIO.HIGH)
   GPIO.output(GpioPin.SYS_G.value.value, GPIO.HIGH)
   GPIO.output(GpioPin.SYS_B.value.value, GPIO.HIGH)
+
+  time.sleep(1)
+  GPIO.output(GpioPin.STK_G.value.value, GPIO.HIGH)
+  GPIO.output(GpioPin.STK_Y.value.value, GPIO.HIGH)
+  GPIO.output(GpioPin.STK_R.value.value, GPIO.HIGH)
+  time.sleep(1)
   GPIO.output(GpioPin.STK_G.value.value, GPIO.LOW)
   GPIO.output(GpioPin.STK_Y.value.value, GPIO.LOW)
   GPIO.output(GpioPin.STK_R.value.value, GPIO.LOW)  
